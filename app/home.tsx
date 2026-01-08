@@ -1,11 +1,17 @@
+import { useRouter } from 'expo-router';
 import { Image, StyleSheet, Text, TouchableOpacity, View, } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 
 
 export default function HomeScreen() {
+
+  const router = useRouter();
   
   
     return (
+
+    <SafeAreaView style={{ flex: 1, backgroundColor:"white" }}>
     <View style={styles.container}>
 
       <View style={styles.header}>
@@ -19,18 +25,31 @@ export default function HomeScreen() {
 
       <View style={styles.card}></View>
 
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/LoadAnswerKey")}
+          //</View>onPress={() => router.push(`/#${VIEWS2.ANSWER_KEY}`)}
+          >
+         <Text style={styles.buttonText}>＋ Sınav Tarat</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>＋ Sınav Tarat</Text>
-      </TouchableOpacity>
 
-    </View>
-
+     </View>
+     </SafeAreaView>
 
   );}
 
 
+/*
+  enum VIEWS  {
+    ANSWER_KEY = "/LoadAnswerKey"
+  }
 
+
+  const VIEWS2 :  { [key: string]: string }  = {
+    ANSWER_KEY : "/LoadAnswerKey", 
+  }
+*/
 
 const styles = StyleSheet.create({
   container: {
@@ -53,7 +72,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 
-
   appName: {
     fontSize: 18,
     fontWeight: '600',
@@ -64,18 +82,19 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    marginTop : 25,
   },
 
  card: {
   flex: 1,
   width: '100%',
-  maxWidth: 250,
-  maxHeight: 400,
-  backgroundColor: '#FFFFFF',   // İÇİ BEYAZ
+  maxWidth: 300,
+  maxHeight: 450,
+  backgroundColor: '#FFFFFF',  
   borderRadius: 16,
-  borderWidth: 1,               // ÇERÇEVE
-  borderColor: '#D1D5DB',       // GRİ (soft)
+  borderWidth: 1,               
+  borderColor: '#D1D5DB',       
   padding: 20,
   alignSelf: 'center',
 },
@@ -84,9 +103,9 @@ const styles = StyleSheet.create({
 
   button: {
     position: 'absolute',
-    bottom: 60,
-    right: 20,
-    backgroundColor: '#2563EB',
+    bottom: 15,
+    right: 35,
+    backgroundColor: '#2F61E2',
     borderRadius: 30,
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -96,6 +115,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

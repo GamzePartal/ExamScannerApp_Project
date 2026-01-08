@@ -51,3 +51,8 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const IMAGES = {
+  BACK:require("../assets/images/back.png"),
+  INFO:require("../assets/images/info.png")
+}
