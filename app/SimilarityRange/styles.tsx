@@ -17,8 +17,8 @@ const styles = StyleSheet.create({
   sliderRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 210,
-    marginTop : 50,
+    marginBottom: 190,
+    marginTop : 50, 
   },
   percent: {
     textAlign: "right",
@@ -27,31 +27,34 @@ const styles = StyleSheet.create({
     fontSize : 22
   },
   infoBox: {
-    borderWidth : 2,
+    borderWidth : 1,
     borderColor : "#d3d7d2ff",
     borderRadius: 30,
-    padding: 13,
+    padding: 10,
     marginBottom: 60,
-    height : 160,
-    width : 300,
-    right : 20
+    height : 100,
+    width : 350,
+    left : -2,
+    alignItems: "center",
+    justifyContent: "center"
   },
   infoText: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#8e8686ff",
-    fontFamily : "arial"
+    fontFamily : "arial",
   },
   infoText2:{
     fontSize: 10,
-    fontWeight : "800",
+    fontWeight : 900,
     color: "rgba(125, 168, 205, 1)",
-    fontFamily : "arial"
+    fontFamily : "arial",
   },
   infoIcon: {
-    height : 30,
-    width : 30,
+    height : 24,
+    width : 24,
     alignItems : "center",
-    bottom : 20
+    bottom : 17,
+    left : 10
   },
   button: {
     backgroundColor: "#2F6BFF",
@@ -67,5 +70,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "600",
   },
+  back: {
+    width : 9,
+    height : 16,
+    bottom : 350
+  }
 });
 export default styles;

@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
@@ -20,11 +19,7 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-     
-        
-        
-      },
+      "adaptiveIcon": {},
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.myapp"
@@ -46,7 +41,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

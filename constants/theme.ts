@@ -54,5 +54,7 @@ export const Fonts = Platform.select({
 
 export const IMAGES = {
   BACK:require("../assets/images/back.png"),
-  INFO:require("../assets/images/info.png")
+  INFO:require("../assets/images/info.png"),
+  CLOUD :require("../assets/images/cloud2.png"),
+  CANCEL : require("../assets/images/cancel.png"),
 }

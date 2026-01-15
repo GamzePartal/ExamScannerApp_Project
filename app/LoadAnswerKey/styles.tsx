@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
     marginTop: 95,
   },
@@ -37,8 +37,8 @@ const styles = StyleSheet.create({
   info: {
     marginTop: 16,
     textAlign: "center",
-    color: "#374151",
-    fontSize: 11,
+    color: "#848890ff",
+    fontSize: 14,
   },
 
   success: {

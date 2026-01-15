@@ -50,7 +50,6 @@ export default function LoadAnswerKey() {
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
         <Image
           source={IMAGES.BACK}
-          // @images, @constants... dynamic path
           style={styles.backIcon}
         />
       </TouchableOpacity>
@@ -64,7 +63,7 @@ export default function LoadAnswerKey() {
           {!isLoaded && (
             <>
               <Image
-                source={require("../../assets/images/cloud2.png")}
+                source={IMAGES.CLOUD}
                 style={styles.cloud}
               />
               <Text style={styles.info}>
@@ -119,8 +118,7 @@ export default function LoadAnswerKey() {
         {isLoaded && (
           <TouchableOpacity
             style={styles.btn}
-            onPress={() => router.push("/LoadedExamPages")}
-          >
+            onPress={() => router.push("/LoadedExamPages")}>
             <Text style={styles.buttonText}>Sınav Kağıdını Yükle</Text>
           </TouchableOpacity>
         )}
