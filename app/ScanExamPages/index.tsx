@@ -5,20 +5,19 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import styles from "./styles";
 
 export default function ScanExamPages() {
-
   const cameraRef = useRef<CameraView | null>(null);
   const [permission, requestPermission] = useCameraPermissions();
-
   const { initialPhotos } = useLocalSearchParams();
   const [photos, setPhotos] = useState<string[]>([]);
   const [deleteMode, setDeleteMode] = useState(false);
 
   useEffect(() => {
     if (initialPhotos) {
-      setPhotos(JSON.parse(initialPhotos as string));
+        try {
+            setPhotos(JSON.parse(initialPhotos as string));
+        } catch(e) {}
     }
   }, []);
-
 
   if (!permission?.granted) {
     return (
@@ -31,11 +30,10 @@ export default function ScanExamPages() {
     );
   }
 
-  
   const takePhoto = async () => {
     if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
-    setPhotos(prev => [...prev, photo.uri]);
+    const photo = await cameraRef.current.takePictureAsync({ quality: 0.7 });
+    if(photo?.uri) setPhotos(prev => [...prev, photo.uri]);
   };
 
   const deletePhoto = (uri: string) => {
@@ -56,7 +54,6 @@ export default function ScanExamPages() {
             style={styles.previewItem}
           >
             <Image source={{ uri }} style={styles.previewImg} />
-
             {deleteMode && (
               <TouchableOpacity
                 style={styles.deleteIcon}
@@ -74,6 +71,7 @@ export default function ScanExamPages() {
           <Text style={styles.text}>Fotoğraf Çek ({photos.length})</Text>
         </TouchableOpacity>
 
+        {/* Yükle butonu sadece parametre ile geri döner (Local Loop) */}
         <TouchableOpacity
           style={[styles.btn, { backgroundColor: "#16A34A" }]}
           onPress={() =>

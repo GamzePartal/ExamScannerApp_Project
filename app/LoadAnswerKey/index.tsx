@@ -5,8 +5,8 @@ import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { DeviceEventEmitter, Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ExamDataManager } from "../ExamDataManager"; // Manager'ı ekledik
 import styles from "./styles";
-
 
 export default function LoadAnswerKey() {
   const router = useRouter();
@@ -16,6 +16,9 @@ export default function LoadAnswerKey() {
   const isLoaded = photos.length > 0 || pdf !== null;
 
   useEffect(() => {
+    // Sayfa her açıldığında Manager'ı temizleyelim ki eski sınav kalmasın
+    ExamDataManager.clear();
+
     const sub = DeviceEventEmitter.addListener(
       "onPhotosSelected",
       (incomingPhotos: string[]) => {
@@ -33,7 +36,6 @@ export default function LoadAnswerKey() {
       type: "application/pdf",
     });
     if (res.canceled) return;
-
     const file = res.assets[0];
     setPdf({ name: file.name, uri: file.uri });
     setPhotos([]);
@@ -45,13 +47,22 @@ export default function LoadAnswerKey() {
     setDeleteMode(false);
   };
 
+  // İLERİ GİTME FONKSİYONU
+  const handleNext = () => {
+    // 1. Elimizdeki veriyi (Pdf veya Foto) hazırla
+    const dataToSave = pdf ? [pdf.uri] : photos;
+
+    // 2. KASAYA KAYDET (Global Manager)
+    ExamDataManager.setAnswerKey(dataToSave);
+
+    // 3. Parametre göndermeden sayfayı değiştir
+    router.push("/LoadedExamPages");
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-        <Image
-          source={IMAGES.BACK}
-          style={styles.backIcon}
-        />
+        <Image source={IMAGES.BACK} style={styles.backIcon} />
       </TouchableOpacity>
 
       <View style={styles.container}>
@@ -62,42 +73,38 @@ export default function LoadAnswerKey() {
         <View style={styles.card}>
           {!isLoaded && (
             <>
-              <Image
-                source={IMAGES.CLOUD}
-                style={styles.cloud}
-              />
-              <Text style={styles.info}>
-                Pdf yükleyin veya fotoğraf çekin
-              </Text>
+              <Image source={IMAGES.CLOUD} style={styles.cloud} />
+              <Text style={styles.info}>Pdf yükleyin veya fotoğraf çekin</Text>
             </>
           )}
 
-          {isLoaded && (<>
+          {isLoaded && (
+            <>
               <LottieView
                 source={require("../../assets/animations/Success.json")}
                 autoPlay
                 loop={false}
-                style={styles.success}/>
-
+                style={styles.success}
+              />
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {photos.map((uri, i) => (
                   <TouchableOpacity
                     key={i}
                     onLongPress={() => setDeleteMode(true)}
-                    activeOpacity={0.8}>
+                    activeOpacity={0.8}
+                  >
                     <Image source={{ uri }} style={styles.photo} />
-
                     {deleteMode && (
                       <TouchableOpacity
                         style={styles.delete}
-                        onPress={() => deletePhoto(uri)}>
+                        onPress={() => deletePhoto(uri)}
+                      >
                         <Text style={styles.deleteText}>✕</Text>
                       </TouchableOpacity>
                     )}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-
               <Text style={styles.hintText}>
                 Silmek istediğiniz öğenin üstüne basılı tutun
               </Text>
@@ -105,9 +112,7 @@ export default function LoadAnswerKey() {
           )}
         </View>
 
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={() => router.push("/CameraScreen")}>
+        <TouchableOpacity style={styles.btn} onPress={() => router.push("/CameraScreen")}>
           <Text style={styles.buttonText}>Cevap Anahtarı Yükle(Fotoğraf)</Text>
         </TouchableOpacity>
 
@@ -116,9 +121,7 @@ export default function LoadAnswerKey() {
         </TouchableOpacity>
 
         {isLoaded && (
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => router.push("/LoadedExamPages")}>
+          <TouchableOpacity style={styles.btn} onPress={handleNext}>
             <Text style={styles.buttonText}>Sınav Kağıdını Yükle</Text>
           </TouchableOpacity>
         )}

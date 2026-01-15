@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,15 +13,24 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import GeminiService from './GeminiService';
 
-// Servisimizi import ediyoruz (Dosya adı ve yolu doğru olmalı)
-import GeminiService from './GeminiServices';
+
+
 
 export default function App() {
   // State tanımları (TypeScript generic kullanımı ile <string>)
   const [inputText, setInputText] = useState<string>('');
   const [responseText, setResponseText] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  
+
+// Sayfa açılınca çalışsın
+useEffect(() => {
+    // Doğru çağırma yöntemi budur:
+    GeminiService.checkAvailableModels();
+  }, []);
 
   // Gönder butonuna basılınca çalışacak fonksiyon
   const handleSendRequest = async () => {

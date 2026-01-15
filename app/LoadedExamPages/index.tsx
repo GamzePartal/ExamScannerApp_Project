@@ -2,18 +2,24 @@ import { IMAGES } from "@/constants/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ExamDataManager } from "../ExamDataManager"; // Manager eklendi
 import styles from "./styles";
 
 export default function LoadedExamPages() {
-
+  const { photos } = useLocalSearchParams(); // Sadece ScanExamPages'den dönen fotoları alır
   const [photoList, setPhotoList] = useState<string[]>([]);
   const [deleteMode, setDeleteMode] = useState(false);
-  const { photos, answerKeyPhotos } = useLocalSearchParams();
 
   useEffect(() => {
-    if (photos) setPhotoList(JSON.parse(photos as string));
+    if (photos) {
+      try {
+        const parsed = typeof photos === 'string' ? JSON.parse(photos) : photos;
+        setPhotoList(parsed);
+      } catch (e) {
+        console.log("Parse hatası", e);
+      }
+    }
   }, [photos]);
-  
 
   const deletePhoto = (uri: string) => {
     setPhotoList(prev => {
@@ -23,6 +29,13 @@ export default function LoadedExamPages() {
     });
   };
 
+  const handleNext = () => {
+    // 1. Ekrandaki öğrenci kağıtlarını KASAYA KAYDET
+    ExamDataManager.setStudentPages(photoList);
+    
+    // 2. Sayfayı değiştir
+    router.push("/SimilarityRange");
+  };
 
   return (
     <View style={styles.container}>
@@ -34,13 +47,14 @@ export default function LoadedExamPages() {
             key={i}
             onLongPress={() => setDeleteMode(true)}
             activeOpacity={0.85}
-            style={styles.photoWrapper}>
+            style={styles.photoWrapper}
+          >
             <Image source={{ uri }} style={styles.image} />
-
             {deleteMode && (
               <TouchableOpacity
                 style={styles.deleteIcon}
-                onPress={() => deletePhoto(uri)}>
+                onPress={() => deletePhoto(uri)}
+              >
                 <Text style={styles.deleteText}>✕</Text>
               </TouchableOpacity>
             )}
@@ -54,22 +68,25 @@ export default function LoadedExamPages() {
         </Text>
       )}
 
-       <TouchableOpacity style={styles.back}
-        onPress={() => router.back()}>
-            <Image source={IMAGES.BACK} style={styles.back} />
-       </TouchableOpacity>
+      <TouchableOpacity style={styles.back} onPress={() => router.back()}>
+        <Image source={IMAGES.BACK} style={styles.back} />
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => router.push({ pathname: "/ScanExamPages",
-            params: { initialPhotos: JSON.stringify(photoList) },})}>
+        onPress={() =>
+          router.push({
+            pathname: "/ScanExamPages",
+            params: { initialPhotos: JSON.stringify(photoList) },
+          })
+        }
+      >
         <Text style={styles.text}>Sınav Kağıdı Ekle</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style = {styles.btn} 
-          onPress={() => router.push("/SimilarityRange")} >
-        <Text style = {styles.buttonText}>İleri</Text>
-
+      {/* İleri butonu veriyi kasaya kaydeder ve gider */}
+      <TouchableOpacity style={styles.btn} onPress={handleNext}>
+        <Text style={styles.buttonText}>İleri</Text>
       </TouchableOpacity>
     </View>
   );

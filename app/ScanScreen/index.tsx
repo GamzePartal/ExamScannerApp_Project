@@ -4,12 +4,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { Alert, Image, Text, TouchableOpacity, View } from "react-native";
-import GeminiService from "./GeminiServices"; // Servisi import ettik
+import { ExamDataManager } from "../ExamDataManager"; // Manager eklendi
+import GeminiService from "../GeminiService";
 import styles from "./styles";
 
 export default function ScanScreen() {
-  const { studentPages, answerKeyPages, similarity } = useLocalSearchParams<any>();
-  const [statusMessage, setStatusMessage] = useState("Görseller hazırlanıyor...");
+  const { similarity } = useLocalSearchParams<any>(); 
+  const [statusMessage, setStatusMessage] = useState("Veriler hazırlanıyor...");
 
   useEffect(() => {
     startAIProcess();
@@ -17,10 +18,9 @@ export default function ScanScreen() {
 
   const compressAndConvertToBase64 = async (uri: string) => {
     try {
-      // 800px yeterli, kalite 0.6 yapıldı (hız için)
       const manipulatedImage = await ImageManipulator.manipulateAsync(
         uri,
-        [{ resize: { width: 800 } }], 
+        [{ resize: { width: 800 } }], // 800px yeterli
         { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG, base64: true }
       );
       return manipulatedImage.base64 || "";
@@ -32,78 +32,72 @@ export default function ScanScreen() {
 
   const startAIProcess = async () => {
     try {
-      console.log("🚀 [ScanScreen] İşlem Başladı");
+      // 1. KASADAN VERİLERİ ÇEK
+      const studentPages = ExamDataManager.getStudentPages();
+      const answerKeyPages = ExamDataManager.getAnswerKey();
 
-      if (!studentPages || !answerKeyPages) {
-        Alert.alert("Hata", "Fotoğraf verisi eksik geldi.");
+      console.log("📥 [ScanScreen] Veriler Alındı:");
+      console.log("   - Öğrenci Sayfa Sayısı:", studentPages.length);
+      console.log("   - Cevap Anahtarı Sayısı:", answerKeyPages.length);
+
+      if (studentPages.length === 0 || answerKeyPages.length === 0) {
+        Alert.alert("Hata", "Veriler hafızada bulunamadı. Lütfen en baştan başlayın.");
         router.back();
         return;
       }
 
-      setStatusMessage("Resimler işleniyor...");
-      
-      // JSON Parse İşlemleri
-      let parsedStudentPages: string[] = [];
-      let parsedAnswerKey: string[] = [];
+      setStatusMessage("Görseller işleniyor...");
 
-      try {
-        parsedStudentPages = typeof studentPages === 'string' ? JSON.parse(studentPages) : studentPages;
-        parsedAnswerKey = typeof answerKeyPages === 'string' ? JSON.parse(answerKeyPages) : answerKeyPages;
-      } catch (e) {
-        console.error("JSON Parse Hatası:", e);
-        Alert.alert("Hata", "Veri formatı bozuk.");
-        router.back();
-        return;
-      }
-
-      // Base64 Dönüşümleri
+      // 2. Base64 Dönüşümleri
       const studentBase64 = await Promise.all(
-        parsedStudentPages.map((uri: string) => compressAndConvertToBase64(uri))
+        studentPages.map(uri => compressAndConvertToBase64(uri))
       );
 
       const answerKeyBase64 = await Promise.all(
-        parsedAnswerKey.map((uri: string) => compressAndConvertToBase64(uri))
+        answerKeyPages.map(uri => compressAndConvertToBase64(uri))
       );
 
-      setStatusMessage("Yapay zeka puanlıyor...");
-
-      // Gemini Prompt Hazırlığı
+      // 3. Prompt Hazırlığı
       const prompt = `
-        Sen bir öğretmensin. Aşağıda sana önce ÖĞRENCİ KAĞITLARI, sonra CEVAP ANAHTARI resimleri verilecek.
-        Benzerlik oranı: %${similarity || 70}
-        
-        Görev:
-        1. Cevap anahtarındaki soruları ve cevapları oku.
-        2. Öğrencinin kağıdındaki cevapları bul.
-        3. Her soru için puan ver.
-        4. Toplam puanı hesapla.
-        
-        Lütfen sonucu sadece JSON formatında döndür:
-        { "sorular": [{ "soru": 1, "puan": 10, "aciklama": "Tam doğru" }], "toplamPuan": 90 }
+        Sen uzman bir öğretmensin. 
+        Görevin: Sana verilen CEVAP ANAHTARI'na bakarak ÖĞRENCİ KAĞIDI'nı puanlamak.
+        Benzerlik Toleransı: %${similarity || 70}
+
+        Talimatlar:
+        1. Önce Cevap Anahtarındaki soruları ve doğru yanıtları analiz et.
+        2. Sonra Öğrenci Kağıdındaki yanıtları oku.
+        3. Her soru için öğrencinin yanıtını cevap anahtarıyla kıyasla.
+        4. Puan ver ve kısa bir açıklama yap.
+
+        Lütfen sonucu JSON formatında ver:
+        {
+          "sonuc": [
+            {"soru": 1, "puan": 10, "aciklama": "Tam doğru"},
+            {"soru": 2, "puan": 5, "aciklama": "Kısmen doğru"}
+          ],
+          "toplamPuan": 15
+        }
       `;
 
-      // Resimlerin hepsini tek bir listeye koyuyoruz (Sırası önemli: önce öğrenci, sonra cevap anahtarı)
-      // Gemini'ye hangi resmin ne olduğunu prompt'ta söyleyebiliriz veya sırayla atarız.
-      // Burada hepsini gönderiyoruz.
-      const allImages = [...studentBase64, ...answerKeyBase64];
+      setStatusMessage("Yapay zeka kağıdı okuyor...");
 
-      const aiResult = await GeminiService.evaluateExam(prompt, allImages);
+      // Tüm görselleri birleştirip gönderiyoruz
+      // (Önce cevap anahtarını göndermek mantıklı olabilir ama model context'ten anlar)
+      const allImages = [...answerKeyBase64, ...studentBase64];
 
-      console.log("✅ Sonuç:", aiResult);
+      const result = await GeminiService.evaluateExam(prompt, allImages);
+      
+      console.log("✅ [ScanScreen] İşlem Başarılı");
+      
+      // Sonucu Alert ile göster veya Sonuç ekranına yönlendir
+      Alert.alert("Sonuç", result);
 
-      // Sonuç sayfasına yönlendir (AIScreen sayfanın olduğunu varsayıyorum)
-       /* router.replace({ 
-         pathname: "/AIScreen", 
-         params: { result: aiResult } 
-       }); */
-       
-       // Şimdilik sonucu alert ile görelim:
-       Alert.alert("Sonuç", aiResult);
-       setStatusMessage("Tamamlandı.");
+      // İstersen burada sonuç sayfasına yönlendir:
+      // router.replace({ pathname: "/ResultScreen", params: { result: result } });
 
     } catch (e: any) {
-      console.error("❌ Hata:", e);
-      Alert.alert("Hata", "İşlem başarısız oldu: " + e.message);
+      console.error("Hata:", e);
+      Alert.alert("Hata", "İşlem başarısız: " + e.message);
       router.back();
     }
   };
@@ -111,7 +105,7 @@ export default function ScanScreen() {
   return (
     <View style={styles.safe}>
       <LottieView
-        source={require("../../assets/animations/scanning.json")} // Dosya yolunun doğru olduğundan emin ol
+        source={require("../../assets/animations/scanning.json")}
         autoPlay
         loop
         style={styles.lottie}
